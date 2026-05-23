@@ -15,8 +15,8 @@ def make_profile_keyboard(tele_id:int,chars:List[Dict[str,int]]):
     for char in chars:
         row.append(
             InlineKeyboardButton(
-                text=f"{char.get("name")}",
-                callback_data=f"C_card:{tele_id}:{char.get("slot")}"
+                text=f"{char.get('name')}",
+                callback_data=f"C_card:{tele_id}:{char.get('slot')}"
         ))
         if len(row)==2:
             kb.row(*row)
