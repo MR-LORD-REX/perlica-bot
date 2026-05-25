@@ -8,4 +8,4 @@ python-dotenv
 fastapi
 uvicorn[standard]
 aiogram==3.24.0
-endfield-cards<=1.0.1
+endfield-cards>=1.0.2
