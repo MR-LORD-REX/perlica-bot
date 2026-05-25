@@ -61,11 +61,9 @@ async def get_character_card(session:AsyncSession,tele_id:int,slot:int)-> CharRe
     settings=await UserSettingsRepo(session).get_user_settings(tele_id)
     if not uid:
         return None   
-    cached=await CacheRepo(session).get_cache(tele_id,cache_type='CHAR')
+    cached=await CacheRepo(session).get_cache(tele_id,cache_type='CHAR',slot=slot)
     card=None
     if cached:
-        cached_slot=int(cached.data) if cached.data else -1
-        if cached_slot==slot:
             return CharRes(
                 cached=True,
                 card=cached.file_id,

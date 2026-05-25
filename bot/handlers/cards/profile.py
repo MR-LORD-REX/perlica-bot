@@ -37,7 +37,7 @@ async def handle_profile(msg:Message,db_session:AsyncSession):
     file=await msg.reply_photo(photo=photo,reply_markup=kb)
     file_id = file.photo[0].file_id
     
-    await CacheRepo(db_session).set_cache(tele_id,file_id,cache_type='PFP',data=f"{res.data}")
+    await CacheRepo(db_session).set_cache(tele_id,file_id,cache_type='PFP',data=f"{res.data}",slot=None)
     await db_session.commit()
     
 @rt.callback_query(lambda c: c.data.startswith("C_card:"))
@@ -61,7 +61,7 @@ async def handle_ccard(cb:CallbackQuery,db_session:AsyncSession):
     file=await cb.message.edit_media(media=photo,reply_markup=kb)
     file_id = file.photo[0].file_id
     
-    await CacheRepo(db_session).set_cache(tele_id,file_id,cache_type='CHAR',data=str(slot))
+    await CacheRepo(db_session).set_cache(tele_id,file_id,cache_type='CHAR',data=str(slot),slot=slot)
     await db_session.commit()
     
     
@@ -88,5 +88,5 @@ async def handle_back(cb:CallbackQuery,db_session:AsyncSession):
     file=await cb.message.edit_media(media=photo,reply_markup=kb)
     file_id = file.photo[0].file_id
     
-    await CacheRepo(db_session).set_cache(tele_id,file_id,cache_type='PFP',data=f"{res.data}")
+    await CacheRepo(db_session).set_cache(tele_id,file_id,cache_type='PFP',data=f"{res.data}",slot=None)
     await db_session.commit()
