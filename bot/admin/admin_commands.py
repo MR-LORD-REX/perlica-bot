@@ -10,6 +10,7 @@ from bot.config.config import OWNER_TELE_ID
 from bot.DB.repo.admin_repo import AdminRepo
 from bot.DB.repo.tele_group_repo import TeleGroupRepo
 from bot.DB.repo.user_repo import UserRepo
+from bot.DB.repo.cmd_meta_repo import CommandMetaRepo
 
 rt = Router()
 logger = logging.getLogger(__name__)
@@ -123,6 +124,68 @@ async def update_admin(message: Message, db_session: AsyncSession):
         f"Select the authority level for the user with telegram id {target_id}",
         reply_markup=kb
     )
+    
+@rt.message(Command("edit_commands"))
+async def edit_commands(message: Message, db_session: AsyncSession):
+    tele_id = message.from_user.id
+    logger.info(f"edit_commands called by user {tele_id}")
+
+    user_authority = await get_user_authority(db_session, tele_id)
+    if user_authority != "owner":
+        logger.warning(f"Unauthorized edit_commands attempt: user {tele_id}")
+        return
+
+    commands = await CommandMetaRepo(db_session).get_all_commands()
+    if not commands:
+        await message.reply("No commands found in the database.")
+        return
+
+    kb = InlineKeyboardBuilder()
+    for cmd, active in commands.items():
+        status = "on" if active else "off"
+        toggle = "off" if active else "on"
+        kb.button(
+            text=f"/{cmd} — {status}",
+            callback_data=f"toggle_cmd:{cmd}:{toggle}"
+        )
+    kb.adjust(1)
+
+    await message.reply("Command status manager — tap to toggle:", reply_markup=kb.as_markup())
+
+
+@rt.callback_query(F.data.startswith("toggle_cmd:"))
+async def toggle_cmd(query: CallbackQuery, db_session: AsyncSession):
+    tele_id = query.from_user.id
+    user_authority = await get_user_authority(db_session, tele_id)
+
+    if user_authority != "owner":
+        await query.answer("Unauthorized.", show_alert=True)
+        return
+
+    _, cmd, new_state = query.data.split(":")
+    active = new_state == "on"
+
+    success = await CommandMetaRepo(db_session).update_cmd(cmd, active)
+    if not success:
+        await query.answer(f"Command /{cmd} not found.", show_alert=True)
+        return
+
+    await db_session.commit()
+
+    commands = await CommandMetaRepo(db_session).get_all_commands()
+    kb = InlineKeyboardBuilder()
+    for c, a in commands.items():
+        status = "on" if a else "off"
+        toggle = "off" if a else "on"
+        kb.button(
+            text=f"/{c} — {status}",
+            callback_data=f"toggle_cmd:{c}:{toggle}"
+        )
+    kb.adjust(1)
+
+    await query.message.edit_reply_markup(reply_markup=kb.as_markup())
+    await query.answer(f"/{cmd} is now {'enabled' if active else 'disabled'}.", show_alert=True)
+    await db_session.commit()
 
 
 # ================================= ADMIN + OWNER =================================

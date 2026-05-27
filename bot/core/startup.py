@@ -20,10 +20,9 @@ async def init_db():
         async with engine.begin() as con:
             await con.run_sync(base.metadata.create_all)
             logger.info("databases created succesfully")
-        if not ENV=="dev":
-            async with Endfield() as ef:
-                await ef.update_assets()
-                logger.info("endfield assets updated successfully")
+        async with Endfield() as ef:
+            await ef.update_assets()
+            logger.info("endfield assets updated successfully")
     except Exception as e:
         logger.error(f"error in startup : {e}")
         sys.exit(1)
