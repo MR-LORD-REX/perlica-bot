@@ -148,7 +148,7 @@ async def edit_commands(message: Message, db_session: AsyncSession):
             text=f"/{cmd} — {status}",
             callback_data=f"toggle_cmd:{cmd}:{toggle}"
         )
-    kb.adjust(1)
+    kb.adjust(2)
 
     await message.reply("Command status manager — tap to toggle:", reply_markup=kb.as_markup())
 
@@ -181,7 +181,7 @@ async def toggle_cmd(query: CallbackQuery, db_session: AsyncSession):
             text=f"/{c} — {status}",
             callback_data=f"toggle_cmd:{c}:{toggle}"
         )
-    kb.adjust(1)
+    kb.adjust(2)
 
     await query.message.edit_reply_markup(reply_markup=kb.as_markup())
     await query.answer(f"/{cmd} is now {'enabled' if active else 'disabled'}.", show_alert=True)
