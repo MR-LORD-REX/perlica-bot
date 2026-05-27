@@ -248,6 +248,27 @@ async def broadcast_photo(message: Message, db_session: AsyncSession):
             await asyncio.sleep(5)
 
     await message.reply("Broadcast sent successfully")
+    
+@rt.message(Command("users"))
+async def list_users(message: Message, db_session: AsyncSession):
+    tele_id = message.from_user.id
+    logger.info(f"users command called by user {tele_id}")
+
+    user_authority = await get_user_authority(db_session, tele_id)
+
+    if user_authority not in ["owner", "admin"]:
+        logger.warning(f"Unauthorized users attempt: user {tele_id}")
+        return
+
+    users = await UserRepo(db_session).get_all()
+    if not users:
+        await message.reply("No users found in the database.")
+        return
+    text = "Users in the database:\n\n"
+    for user in users:
+        status = "Banned" if user.is_banned else "Active"
+        text += f"Telegram ID: {user.telegram_id}, Username: {user.username}, Display Name: {user.display_name}, Status: {status}\n"
+    await message.reply(text)
 
 
 # ================================= MODERATOR + ADMIN + OWNER =================================
