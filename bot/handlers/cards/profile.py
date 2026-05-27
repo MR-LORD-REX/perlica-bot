@@ -1,4 +1,5 @@
 from aiogram import Router
+from aiogram.types import ReactionTypeEmoji
 from aiogram.types import Message , CallbackQuery , InputMediaPhoto
 from aiogram.filters import Command
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,6 +25,10 @@ async def handle_profile(msg:Message,db_session:AsyncSession):
     if not user or not uid:
         await msg.reply("please login using /login or /switch ")
         return
+    try:
+        await msg.react([ReactionTypeEmoji(emoji="👍")])
+    except Exception as e:
+        logger.error(f"error while reacting to message: {e}")
     res=await get_profile_card(db_session,tele_id)
     if not res:
         kb=make_report_keboard(tele_id,uid.game_id,r_type='PFP')

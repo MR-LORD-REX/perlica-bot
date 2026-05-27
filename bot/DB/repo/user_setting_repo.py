@@ -40,3 +40,21 @@ class UserSettingsRepo(BaseRepo):
         
         await self.update(settings)
         return settings
+    
+    async def get_all_users_with_daily_reminder(self) -> list[int]:
+        query = select(self.model).where(self.model.dalies_reminder == True)
+        result = await self.session.execute(query)
+        settings_list = result.scalars().all()
+        return [settings.user_id for settings in settings_list]
+    
+    async def get_all_users_with_weekly_reminder(self) -> list[int]:
+        query = select(self.model).where(self.model.weekly_reminder == True)
+        result = await self.session.execute(query)
+        settings_list = result.scalars().all()
+        return [settings.user_id for settings in settings_list]
+    
+    async def get_all_users_with_perform_daily(self) -> list[int]:
+        query = select(self.model).where(self.model.perform_daily == True)
+        result = await self.session.execute(query)
+        settings_list = result.scalars().all()
+        return [settings.user_id for settings in settings_list]

@@ -1,5 +1,7 @@
 from sqlalchemy import select 
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Sequence
 
 from aiogram.types import Message
 
@@ -7,6 +9,7 @@ import logging
 
 from bot.DB.repo.base import BaseRepo
 from bot.DB import Users
+from bot.DB.models.users_in_gc import UsersInGroup
 
 logger=logging.getLogger(__name__)
 
@@ -77,6 +80,19 @@ class UserRepo(BaseRepo):
         user.banned=False
         await self.update(user)
         return True
+    
+    async def get_groups(self, tele_id: int) -> Sequence[UsersInGroup]:
+        query = select(self.model).where(self.model.telegram_id == tele_id).options(
+            selectinload(Users.groups).selectinload(UsersInGroup.group)
+        )
+        result = await self.session.execute(query)
+        user = result.scalar_one_or_none()
+        
+        if not user:
+            logger.warning(f"user not found for tele_id {tele_id}")
+            return []
+        
+        return user.groups
     
     
     

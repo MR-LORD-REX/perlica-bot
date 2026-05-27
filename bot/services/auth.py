@@ -9,6 +9,7 @@ from bot.DB.repo.user_repo import UserRepo
 from bot.DB.repo.game_ids_repo import GameIDs_repo
 from bot.DB.repo.user_setting_repo import UserSettingsRepo
 from bot.DB.repo.cache_repo import CacheRepo
+from bot.utils.auth import encrypt_token , decrypt_token
 
 logger=logging.getLogger(__name__)
 
@@ -19,6 +20,24 @@ class LoginResp(BaseModel):
 class UidResp(BaseModel):
     success:bool
     name:str|None=None
+    
+async def check_user(session:AsyncSession,tele_id:int)->bool:
+    user= await UserRepo(session).get_by_tele_id(tele_id)
+    if not user:
+        return False
+    return True
+
+async def verify_token(token:str)->bool:
+    try:
+        async with Endfield() as ef:
+            game_data=await ef.get_game_stats(token)
+            if game_data is not None:
+                return True
+            else:
+                return False
+    except Exception as e:
+        logger.warning(f"error {e} while verifying token")
+        return False
     
 async def verify_uid(uid:int)->UidResp:
     async with Endfield() as ef :
@@ -92,8 +111,45 @@ async def switch(session:AsyncSession,tele_id:int,game_id:int) -> LoginResp:
         success=True
     )
     
-async def check_user(session:AsyncSession,tele_id:int)->bool:
-    user= await UserRepo(session).get_by_tele_id(tele_id)
-    if not user:
-        return False
-    return True
+async def token_login(session:AsyncSession,tele_id:int,token:str) -> LoginResp:
+    current=await GameIDs_repo(session).get_active_UID(tele_id)
+    if not current :
+        return LoginResp(
+            msg=f"Please login using /login ",
+            success=False
+        )
+    if current.auth_token:
+        return LoginResp(
+            msg=f"You have already set token for this UID use /switch or /token_logout",
+            success=False
+        )
+    res=await verify_token(token)
+    if not res:
+        return LoginResp(
+            success=False,
+            msg="Invalid Token"
+        )
+    enc_token=encrypt_token(token)
+    await GameIDs_repo(session).add_auth_token(tele_id,enc_token)
+    return LoginResp(
+        msg=f"successfully set token for the UID:{current.game_id}\nDo NOT share this token with anyone !!!\n Token expiry is 60 days or until you change your password , make sure to update it in the bot.",
+        success=True
+    )
+
+async def token_logout(session:AsyncSession,tele_id:int) -> LoginResp:
+    current=await GameIDs_repo(session).get_active_UID(tele_id)
+    if not current :
+        return LoginResp(
+            msg=f"Please login using /login ",
+            success=False
+        )
+    if not current.auth_token:
+        return LoginResp(
+            msg=f"You dont have any token set for this UID",
+            success=False
+        )
+    await GameIDs_repo(session).remove_auth_token(tele_id)
+    return LoginResp(
+        msg=f"successfully removed token for UID:{current.game_id}",
+        success=True
+    )

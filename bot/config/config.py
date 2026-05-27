@@ -1,9 +1,14 @@
 from dotenv import load_dotenv
 load_dotenv()
 
+from typing import Dict , Any 
 import os
 import sys
 import logging
+
+from bot.middleware.commands import CommandsAvailability
+from bot.services.UG_cache import UsersRecord, GroupsRecord
+from bot.utils.scheduler import Scheduler
 
 logger=None
 
@@ -17,7 +22,7 @@ setup_logging()
 
 logger = logging.getLogger(__name__)
 
-ENVS=['DB_URL', 'BOT_TOKEN', 'MODE','ENV',"WEBHOOK_PATH","WEBHOOK_SECRET","PORT"]
+ENVS=['DB_URL', 'BOT_TOKEN', 'MODE','ENV',"WEBHOOK_PATH","WEBHOOK_SECRET","PORT","FERNET_KEY"]
 
 CACHE_TTL=300 #10 mins in seconds
 
@@ -33,9 +38,21 @@ BOT_TOKEN = os.getenv('BOT_TOKEN')
 MODE=os.getenv('MODE')
 ENV=os.getenv('ENV')
 
+FERNET_KEY=os.getenv('FERNET_KEY')
+
 WEBHOOK_PATH=os.getenv("WEBHOOK_PATH","/webhook")
 WEBHOOK_SECRET=os.getenv("WEBHOOK_SECRET","perlica")
+
+OWNER_TELE_ID=int(os.getenv("OWNER_TELE_ID","5103772471"))
+CHANNEL_LINK="https://t.me/Neuvillette_help"
+
 PORT=os.getenv("PORT",8000)
 
 _render_url = os.getenv("RENDER_EXTERNAL_URL")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL") or (_render_url if _render_url else f"http://localhost:{PORT}")
+
+cmdavailability: CommandsAvailability=CommandsAvailability()
+
+users_record:UsersRecord=UsersRecord()
+groups_record:GroupsRecord=GroupsRecord()
+scheduler=Scheduler()

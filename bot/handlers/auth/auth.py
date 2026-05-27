@@ -1,10 +1,12 @@
 from aiogram import Router
-from aiogram.types import Message , CallbackQuery
+from aiogram.types import Message , CallbackQuery 
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.filters import Command
 from sqlalchemy.ext.asyncio import AsyncSession
 import logging
 
-from bot.services.auth import login , check_user , switch , logout
+from bot.config.config import CHANNEL_LINK
+from bot.services.auth import login , check_user , switch , logout , token_login , token_logout
 from bot.DB.repo.game_ids_repo import GameIDs_repo
 from bot.handlers.auth.kb import make_switch_kb
 
@@ -20,7 +22,9 @@ async def handle_login(msg:Message,db_session:AsyncSession):
     uid = int(args[1])
     tele_id=msg.from_user.id
     res=await login(db_session,tele_id,msg,uid)
-    await msg.reply(f"{res.msg}")
+    kb=InlineKeyboardBuilder()
+    kb.button(text="Join our channel",url=CHANNEL_LINK)
+    await msg.reply(f"{res.msg}", reply_markup=kb.as_markup(), parse_mode=None)
     if res.success:
         await db_session.commit()
         
@@ -52,7 +56,36 @@ async def handle_logout(msg:Message,db_session:AsyncSession):
         
     res=await logout(db_session,tele_id)
     await msg.reply(res.msg)
+    await db_session.commit()
     
+    if res.success:
+        await db_session.commit()
+        
+@rt.message(Command("token_login"))
+async def handle_token_login(msg:Message,db_session:AsyncSession):
+    args = msg.text.split(maxsplit=1)
+    if len(args) < 2 :
+        await msg.reply("Please provide a valid token. Usage: /token_login token")
+        return
+    token=args[-1]
+    res=await token_login(db_session,msg.from_user.id,token)
+    await msg.reply(text=res.msg)
+    if res.success:
+        await db_session.commit()
+        await msg.delete()
+    else:
+        await db_session.rollback()
+        
+@rt.message(Command("token_logout"))
+async def handle_logout(msg:Message,db_session:AsyncSession):
+    tele_id=msg.from_user.id
+    user=await check_user(db_session,tele_id)
+    all_uids=await GameIDs_repo(db_session).get_UIDs(tele_id)
+    if not user or not all_uids:
+        await msg.reply("Please login using /login UID_NUMBER")
+        return
+    res=await token_logout(db_session,tele_id)
+    await msg.reply(res.msg)
     if res.success:
         await db_session.commit()
         
