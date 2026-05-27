@@ -47,6 +47,9 @@ async def help(msg: Message):
     
 @rt.message(Command("token_help"))
 async def token_help(msg: Message):
+    if msg.chat.type != "private":
+        await msg.reply("Please use this command in private chat.")
+        return
     kb=InlineKeyboardBuilder()
     kb.button(text="Join our channel",url=CHANNEL_LINK)
     text = (

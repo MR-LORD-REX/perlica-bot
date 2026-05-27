@@ -63,6 +63,9 @@ async def handle_logout(msg:Message,db_session:AsyncSession):
         
 @rt.message(Command("token_login"))
 async def handle_token_login(msg:Message,db_session:AsyncSession):
+    if msg.chat.type != "private":
+        await msg.reply("Please use this command in private chat.")
+        return
     args = msg.text.split(maxsplit=1)
     if len(args) < 2 :
         await msg.reply("Please provide a valid token. Usage: /token_login token")
