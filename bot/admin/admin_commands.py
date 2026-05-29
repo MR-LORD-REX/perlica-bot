@@ -266,7 +266,7 @@ async def list_users(message: Message, db_session: AsyncSession):
         return
     text = "Users in the database:\n\n"
     for user in users:
-        status = "Banned" if user.is_banned else "Active"
+        status = "Banned" if user.banned else "Active"
         text += f"Telegram ID: {user.telegram_id}, Username: {user.username}, Display Name: {user.display_name}, Status: {status}\n"
     await message.reply(text)
 

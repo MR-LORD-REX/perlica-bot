@@ -31,6 +31,7 @@ class CommandChecker(BaseMiddleware):
         cmd:CommandObject|None=data.get("command")
         if cmd:
             cmd_name=cmd.command.lower()
+            print(f"checking availability for command : {cmd_name}")
             if not self.availability.is_enabled(cmd_name):
                 await event.answer(f"The command :{cmd_name} is disabled right now , contact bot admins for the query .")
                 return

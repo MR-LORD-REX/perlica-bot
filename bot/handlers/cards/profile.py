@@ -21,7 +21,7 @@ rt=Router()
 async def _send_profile_with_cache_fallback(msg: Message, db_session: AsyncSession, tele_id: int, res, kb):
     """Try cached Telegram file_id first; regenerate if it becomes invalid."""
     try:
-        if not res.cached:
+        if not res.cached or not res.card:
             photo = await image_to_tgFile(res.card)
         else:
             photo = res.card
@@ -79,14 +79,15 @@ async def handle_ccard(cb:CallbackQuery,db_session:AsyncSession):
     res=await get_character_card(db_session,tele_id,slot)
     kb=make_back_kb(tele_id)
     try:
-        if res.cached:
+        if res.cached and res.card:
             photo=InputMediaPhoto(media=res.card)
         else:
             file=await image_to_tgFile(res.card)
             photo=InputMediaPhoto(media=file)
         file=await cb.message.edit_media(media=photo,reply_markup=kb)
     except TelegramBadRequest as e:
-        if "wrong file identifier" not in str(e).lower():
+        error_lower = str(e).lower()
+        if "wrong file identifier" not in error_lower and "media_empty" not in error_lower:
             raise
         logger.warning(f"Invalid cached character file_id for {tele_id}, regenerating card")
         await CacheRepo(db_session).delete_all_cache(tele_id)
@@ -121,14 +122,15 @@ async def handle_back(cb:CallbackQuery,db_session:AsyncSession):
         return
     kb=make_profile_keyboard(tele_id,chars=res.data)
     try:
-        if not res.cached:
+        if not res.cached or not res.card:
             file=await image_to_tgFile(res.card)
             photo=InputMediaPhoto(media=file)
         else:
             photo=InputMediaPhoto(media=res.card)
         file=await cb.message.edit_media(media=photo,reply_markup=kb)
     except TelegramBadRequest as e:
-        if "wrong file identifier" not in str(e).lower():
+        error_lower = str(e).lower()
+        if "wrong file identifier" not in error_lower and "media_empty" not in error_lower:
             raise
         logger.warning(f"Invalid cached profile file_id on back for {tele_id}, regenerating card")
         await CacheRepo(db_session).delete_all_cache(tele_id)
