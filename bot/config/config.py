@@ -22,7 +22,7 @@ setup_logging()
 
 logger = logging.getLogger(__name__)
 
-ENVS=['DB_URL', 'BOT_TOKEN', 'MODE','ENV',"WEBHOOK_PATH","WEBHOOK_SECRET","PORT","FERNET_KEY"]
+ENVS=['DB_URL', 'BOT_TOKEN', 'MODE','ENV',"WEBHOOK_PATH","WEBHOOK_SECRET","PORT","FERNET_KEY","REDIS_HOST","REDIS_PORT","REDIS_PASS"]
 
 CACHE_TTL=300 #10 mins in seconds
 
@@ -39,6 +39,11 @@ MODE=os.getenv('MODE')
 ENV=os.getenv('ENV')
 
 FERNET_KEY=os.getenv('FERNET_KEY')
+
+REDIS_HOST=os.getenv('REDIS_HOST')
+REDIS_PORT=int(os.getenv('REDIS_PORT', 6379))
+REDIS_PASS=os.getenv('REDIS_PASS')
+REDIS_USERNAME=os.getenv('REDIS_USERNAME', 'default')
 
 WEBHOOK_PATH=os.getenv("WEBHOOK_PATH","/webhook")
 WEBHOOK_SECRET=os.getenv("WEBHOOK_SECRET","perlica")

@@ -16,11 +16,7 @@ from bot.services.UG_cache import load_users, load_groups
 
 logger = logging.getLogger(__name__)
 
-
-
 rt = Router()
-
-
 
 @rt.my_chat_member(ChatMemberUpdatedFilter(member_status_changed=MEMBER))
 async def bot_added_to_group(update: ChatMemberUpdated):
@@ -113,6 +109,7 @@ async def handle_all_messages(message: Message,db_session: AsyncSession):
                             logger.info(f" UPDATE (DM): User {user_id} | name: {old_username}→{user_name} | display: {old_display}→{display_name}")
                         else:
                             logger.warning(f" FAILED: User {user_id} not found in database for update (DM)")
+            await db_session.commit()
         except Exception as e:
             logger.error(f" ERROR: Failed to update user-group cache | User: {user_id} | Group: {group_id} | Error: {e}", exc_info=True)
     except Exception as e:

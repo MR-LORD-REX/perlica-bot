@@ -6,6 +6,7 @@ from bot.handlers.routers import setup_routers
 from bot.services.live_cards import send_daily_reminder, send_weekly_reminder , perform_daily_tasks
 from bot.utils.scheduler import scheduled_tasks_on_startup
 from bot.config.config import ENV , scheduler
+from bot.redis_store import redis_connector
 
 from endfield import Endfield
 
@@ -47,6 +48,7 @@ async def add_commands():
             
 async def on_startup():
     await init_db()
+    await redis_connector.connect()
     await add_commands()
     scheduler.add_daily(
         task_id="daily_reminder",
@@ -59,7 +61,7 @@ async def on_startup():
         task_id="weekly_reminder",
         task_name="weekly reminder for users",
         coro=send_weekly_reminder,
-        weekly_schedule={"sunday":(4,30)}
+        weekly_schedule={"sunday":(6,30)} # UTC time for IST Sunday 12:00 PM
     )
     scheduler.add_daily(
         task_id="perform_daily_tasks",

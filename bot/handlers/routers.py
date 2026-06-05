@@ -9,6 +9,7 @@ from bot.handlers.groups import rt as groups
 from bot.handlers.live_cards import rt as live_cards
 from bot.admin.admin_commands import rt as admins
 from bot.handlers.settings import rt as settings
+from bot.handlers.blueprints.blueprints import rt as bp
 
 #### WARNING - KEEP " groups " ROUTER LAST IN THE LIST TO AVOID CONFLICTS 
 routers=[
@@ -18,6 +19,7 @@ routers=[
     live_cards,
     admins,
     settings,
+    bp,
     groups,
     ]
 logger=logging.getLogger(__name__)
