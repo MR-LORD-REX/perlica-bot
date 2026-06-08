@@ -9,6 +9,7 @@ from bot.config.config import ENV , scheduler
 from bot.redis_store import redis_connector
 
 from endfield import Endfield
+from endfield_cards import EFCard
 
 import logging
 import sys
@@ -21,9 +22,12 @@ async def init_db():
         async with engine.begin() as con:
             await con.run_sync(base.metadata.create_all)
             logger.info("databases created succesfully")
-        async with Endfield() as ef:
-            await ef.update_assets()
-            logger.info("endfield assets updated successfully")
+        # async with Endfield() as ef:
+        #     await ef.update_assets()
+        #     logger.info("endfield assets updated successfully")
+        async with EFCard() as ef:
+            await ef.update_builds()
+            logger.info("endfield card builds updated successfully")
     except Exception as e:
         logger.error(f"error in startup : {e}")
         sys.exit(1)

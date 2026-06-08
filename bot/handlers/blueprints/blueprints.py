@@ -5,8 +5,6 @@ from aiogram.types import (
     InlineQueryResultArticle,
     InputTextMessageContent,
     CallbackQuery,
-    InlineKeyboardMarkup,
-    InlineKeyboardButton,
     InputMediaPhoto,
 )
 from aiogram.filters import Command
@@ -18,7 +16,6 @@ from bot.redis_store import redis_connector, BlueprintRedisStore
 from .kb import get_regions_keyboard , get_bp_kb
 
 rt= Router()
-
 
 @rt.message(Command("blueprints"))
 async def blueprints_handler(message:Message,db_session:AsyncSession):

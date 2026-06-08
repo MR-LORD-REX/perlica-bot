@@ -5,7 +5,6 @@ from bot.core.main import start
 
 logger = logging.getLogger(__name__)
 
-        
 if __name__=="__main__":
     try:
         run(start())
