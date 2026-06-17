@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import logging
 import asyncio
 
-from bot.config.config import OWNER_TELE_ID
+from bot.config.config import OWNER_TELE_ID , cmdavailability
 from bot.DB.repo.admin_repo import AdminRepo
 from bot.DB.repo.tele_group_repo import TeleGroupRepo
 from bot.DB.repo.user_repo import UserRepo
@@ -42,6 +42,24 @@ async def get_user_authority(db_session: AsyncSession, tele_id: int):
 
 # ================================= OWNER ONLY COMMANDS =================================
 
+@rt.message(Command("update_assets"))
+async def update_assets(message: Message, db_session: AsyncSession):
+    tele_id = message.from_user.id
+    logger.info(f"update_assets command called by user {tele_id}")
+
+    user_authority = await get_user_authority(db_session, tele_id)
+
+    if user_authority != "owner":
+        logger.warning(f"Unauthorized update_assets attempt: user {tele_id}")
+        return
+    try:
+        from endfield import Endfield
+        async with Endfield() as ef:
+            await ef.update_assets()
+        await message.reply("Assets updated successfully")
+    except Exception as e:
+        await message.reply(f"Error updating assets: {e}")
+    
 @rt.message(Command("add_admin"))
 async def add_admin(message: Message, db_session: AsyncSession):
     tele_id = message.from_user.id
@@ -148,7 +166,7 @@ async def edit_commands(message: Message, db_session: AsyncSession):
             text=f"/{cmd} — {status}",
             callback_data=f"toggle_cmd:{cmd}:{toggle}"
         )
-    kb.adjust(2)
+    kb.adjust(3)
 
     await message.reply("Command status manager — tap to toggle:", reply_markup=kb.as_markup())
 
@@ -186,6 +204,9 @@ async def toggle_cmd(query: CallbackQuery, db_session: AsyncSession):
     await query.message.edit_reply_markup(reply_markup=kb.as_markup())
     await query.answer(f"/{cmd} is now {'enabled' if active else 'disabled'}.", show_alert=True)
     await db_session.commit()
+    new = await CommandMetaRepo(db_session).get_all_commands()
+    cmdavailability.load(new)
+
 
 
 # ================================= ADMIN + OWNER =================================
@@ -264,11 +285,24 @@ async def list_users(message: Message, db_session: AsyncSession):
     if not users:
         await message.reply("No users found in the database.")
         return
-    text = "Users in the database:\n\n"
-    for user in users:
-        status = "Banned" if user.banned else "Active"
-        text += f"Telegram ID: {user.telegram_id}, Username: {user.username}, Display Name: {user.display_name}, Status: {status}\n"
-    await message.reply(text)
+    
+    text = "👥 <b>Users in Database</b>\n"
+    text += "=" * 50 + "\n\n"
+    
+    for idx, user in enumerate(users, 1):
+        status_icon = "🚫" if user.banned else "✓"
+        status_text = "Banned" if user.banned else "Active"
+        username = user.username if user.username else "—"
+        display_name = user.display_name if user.display_name else "—"
+        
+        text += f"<b>#{idx}</b>\n"
+        text += f"  ID: <code>{user.telegram_id}</code>\n"
+        text += f"  Username: <code>@{username}</code>\n"
+        text += f"  Name: {display_name}\n"
+        text += f"  Status: {status_icon} {status_text}\n"
+        text += "─" * 50 + "\n"
+    
+    await message.reply(text, parse_mode="HTML")
 
 
 # ================================= MODERATOR + ADMIN + OWNER =================================

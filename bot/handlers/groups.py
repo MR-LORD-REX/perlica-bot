@@ -30,6 +30,7 @@ async def bot_added_to_group(update: ChatMemberUpdated):
             if not existing_group:
                 await group_repo.add_group(group_id, group_name)
                 logger.info(f"Bot added to group: {group_name} (ID: {group_id})")
+                await session.commit()
             else:
                 logger.info(f"Bot already in group: {group_name} (ID: {group_id})")
     except Exception as e:
@@ -47,10 +48,12 @@ async def bot_removed_from_group(update: ChatMemberUpdated):
             if group:
                 await group_repo.delete(group)
                 logger.info(f"Bot removed from group: {group_name} (ID: {group_id})")
+                await session.commit()
             else:
                 logger.warning(f"Group not found in database: {group_id}")
     except Exception as e:
         logger.error(f"error removing group: {e}")
+
 
 
 @rt.message()

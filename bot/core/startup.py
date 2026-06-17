@@ -22,9 +22,9 @@ async def init_db():
         async with engine.begin() as con:
             await con.run_sync(base.metadata.create_all)
             logger.info("databases created succesfully")
-        # async with Endfield() as ef:
-        #     await ef.update_assets()
-        #     logger.info("endfield assets updated successfully")
+        async with Endfield() as ef:
+            await ef.update_assets()
+            logger.info("endfield assets updated successfully")
         async with EFCard() as ef:
             await ef.update_builds()
             logger.info("endfield card builds updated successfully")

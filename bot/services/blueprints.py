@@ -15,7 +15,7 @@ def load_items_dict():
     Returns: {itemId: {id, name, icon_url}, ...}
     """
     endfield_path = Path(endfield.__file__).parent
-    slugs_file = endfield_path / "assets" / "slugs.json"
+    slugs_file = endfield_path / "assets" /"factory"/ "slugs.json"
     
     with open(slugs_file, 'r', encoding='utf-8') as f:
         slugs_data = json.load(f)

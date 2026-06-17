@@ -49,7 +49,7 @@ async def verify_uid(uid:int)->UidResp:
                 name=name
             )
         except Exception as e:
-            logger.error(f"invalid uid :{uid}")
+            logger.error(f"invalid uid :{uid}" , "error:",e)
             return UidResp(
                 success=False
             )
