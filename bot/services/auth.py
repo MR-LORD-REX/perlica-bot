@@ -4,6 +4,8 @@ from endfield import Endfield
 from pydantic import BaseModel
 import logging
 
+from endfield.models.auth.user import User
+
 
 from bot.DB.repo.user_repo import UserRepo
 from bot.DB.repo.game_ids_repo import GameIDs_repo
@@ -27,17 +29,17 @@ async def check_user(session:AsyncSession,tele_id:int)->bool:
         return False
     return True
 
-async def verify_token(token:str)->bool:
+async def verify_token(token:str)-> User| None:
     try:
         async with Endfield() as ef:
-            game_data=await ef.get_game_stats(token)
-            if game_data is not None:
-                return True
+            user=await ef.verify_user(token)
+            if user is not None:
+                return user
             else:
-                return False
+                return None
     except Exception as e:
         logger.warning(f"error {e} while verifying token")
-        return False
+        return None
     
 async def verify_uid(uid:int)->UidResp:
     async with Endfield() as ef :
@@ -130,9 +132,18 @@ async def token_login(session:AsyncSession,tele_id:int,token:str) -> LoginResp:
             msg="Invalid Token"
         )
     enc_token=encrypt_token(token)
-    await GameIDs_repo(session).add_auth_token(tele_id,enc_token)
+    await GameIDs_repo(session).add_auth_token(
+        tele_id,enc_token,
+        skport_id=res.skport_id,
+        skport_name=res.skport_name,
+        server_id=res.server_id,
+        sk_role=res.sk_role
+        )
     return LoginResp(
-        msg=f"successfully set token for the UID:{current.game_id}\nDo NOT share this token with anyone !!!\n Token expiry is 60 days or until you change your password , make sure to update it in the bot.",
+        msg=f"successfully set token for the UID:{current.game_id}\n\
+            skport username:{res.skport_name}\n\
+            Do NOT share this token with anyone !!!\n \
+            Token expiry is 60 days or until you change your password , make sure to update it in the bot.",
         success=True
     )
 

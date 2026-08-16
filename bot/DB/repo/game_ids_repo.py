@@ -73,11 +73,22 @@ class GameIDs_repo(BaseRepo):
         await self.update(target)
         return target
     
-    async def add_auth_token(self,tele_id:int,auth_token:str) -> GameID | None :
+    async def add_auth_token(
+        self,tele_id:int,
+        auth_token:str,
+        skport_id:int=None,
+        skport_name:str=None,
+        server_id:int=None,
+        sk_role:str=None
+        ) -> GameID | None :
         current=await self.get_active_UID(tele_id)
         if not current :
             return None
         current.auth_token=auth_token
+        current.skport_id=skport_id
+        current.skport_name=skport_name
+        current.server_id=server_id
+        current.sk_role=sk_role
         await self.update(current)
         return current
     

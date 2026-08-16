@@ -4,7 +4,9 @@ import logging
 
 from bot.handlers.start import rt as start
 from bot.handlers.auth.auth import rt as login
+from bot.handlers.cards.common import rt as cards_ui
 from bot.handlers.cards.profile import rt as profile
+from bot.handlers.endgames import rt as endgames
 from bot.handlers.groups import rt as groups
 from bot.handlers.live_cards import rt as live_cards
 from bot.admin.admin_commands import rt as admins
@@ -12,11 +14,13 @@ from bot.handlers.settings import rt as settings
 from bot.handlers.blueprints.blueprints import rt as bp
 from bot.handlers.guides.guides import rt as guides
 
-#### WARNING - KEEP " groups " ROUTER LAST IN THE LIST TO AVOID CONFLICTS 
+#### WARNING - KEEP " groups " ROUTER LAST IN THE LIST TO AVOID CONFLICTS
 routers=[
     start,
     login,
+    cards_ui,
     profile,
+    endgames,
     live_cards,
     admins,
     settings,

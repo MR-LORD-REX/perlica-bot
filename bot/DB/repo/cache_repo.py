@@ -16,14 +16,16 @@ class CacheRepo(BaseRepo):
         
     async def get_cache(
         self,tele_id:int,
-        cache_type:Literal['PFP','CHAR'],
-        slot:int|None=None
+        cache_type:Literal['PFP','CHAR','MONUA','MONUD','ALLC','GAMEC'],
+        slot:int|None=None,
+        char_id:str|None=None
         )->Cache|None:
         
         query=select(self.model).where(
             self.model.telegram_id==tele_id,
             self.model.type==cache_type,
-            self.model.slot==slot
+            self.model.slot==slot,
+            self.model.char_id==char_id
             )
         
         result=await self.session.execute(query)
@@ -39,15 +41,17 @@ class CacheRepo(BaseRepo):
     async def set_cache(
         self,tele_id:int,
         file_id:str,
-        cache_type:Literal['PFP','CHAR'],
+        cache_type:Literal['PFP','CHAR','MONUA','MONUD','ALLC','GAMEC'],
         data:str|None,
-        slot:int|None=None
+        slot:int|None=None,
+        char_id:str|None=None
         )->None:
-        cache=await self.get_cache(tele_id,cache_type,slot=slot)
+        cache=await self.get_cache(tele_id,cache_type,slot=slot,char_id=char_id)
         if cache:
             cache.file_id=file_id
             cache.data=data
             cache.slot=slot
+            cache.char_id=char_id
             cache.created_at=datetime.now(timezone.utc)
             await self.update(cache)
         else:
@@ -56,6 +60,7 @@ class CacheRepo(BaseRepo):
                 file_id=file_id,
                 data=data,
                 slot=slot,
+                char_id=char_id,
                 type=cache_type,
                 created_at=datetime.now(timezone.utc)
             )
