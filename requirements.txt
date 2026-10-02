@@ -13,3 +13,4 @@ endfield-py>=1.2.0
 cryptography
 redis
 alembic
+greenlet
